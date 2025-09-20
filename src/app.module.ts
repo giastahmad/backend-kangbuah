@@ -8,7 +8,7 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { ChatModule } from './chat/chat.module';
 import { UsersModule } from './users/users.module';
-
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
   imports: [
@@ -26,6 +26,7 @@ import { UsersModule } from './users/users.module';
       }),
       inject: [ConfigService],
     }),
+    SupabaseModule, 
     AuthModule,
     ProductsModule,
     OrdersModule,
