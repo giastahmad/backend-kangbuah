@@ -35,12 +35,8 @@ export class AuthService {
     // Tampilkan error yang lebih detail untuk debugging
     console.error("Error detail:", error); 
     
-    // Tetap kirim pesan error yang umum ke user
     throw new UnauthorizedException('Terjadi masalah saat memproses login.');
 }
-    // catch (error) {
-    //   throw new UnauthorizedException('Token Firebase tidak valid.');
-    // }
   }
 
   private generateCustomJwt(user: User) {
