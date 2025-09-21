@@ -1,3 +1,4 @@
+// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -6,13 +7,17 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
+import { FirebaseModule } from '../firebase/firebase.module';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [
     UsersModule,
+    FirebaseModule,
+    SupabaseModule, 
     PassportModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule], // Impor ConfigModule agar bisa dipakai di useFactory
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: { expiresIn: '1d' },
@@ -21,6 +26,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy]
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService], 
 })
 export class AuthModule {}

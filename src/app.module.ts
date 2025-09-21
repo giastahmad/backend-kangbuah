@@ -9,10 +9,12 @@ import { OrdersModule } from './orders/orders.module';
 import { ChatModule } from './chat/chat.module';
 import { UsersModule } from './users/users.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { FirebaseModule } from './firebase/firebase.module'; 
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -20,13 +22,15 @@ import { SupabaseModule } from './supabase/supabase.module';
         url: configService.get<string>('DATABASE_URL'),
         synchronize: false,
         ssl: {
-          rejectUnauthorized: false, // Untuk production database yang memerlukan SSL
+          rejectUnauthorized: false, 
         },
-        autoLoadEntities: true, // Otomatis load semua entities
+        autoLoadEntities: true,
       }),
       inject: [ConfigService],
     }),
-    SupabaseModule, 
+
+    SupabaseModule,
+    FirebaseModule,  
     AuthModule,
     ProductsModule,
     OrdersModule,
