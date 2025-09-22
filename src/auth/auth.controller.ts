@@ -112,4 +112,46 @@ export class AuthController {
       is_verified: true,
     };
   }
+
+  @Post('forgot-password')
+    async forgotPassword(@Body() body: { email: string }) {
+      const { email } = body;
+      if (!email) throw new BadRequestException('Email wajib diisi');
+
+      // cek user di Supabase
+      const dbUser = await this.supabaseService.findUserByEmail(email);
+      if (!dbUser) throw new BadRequestException('User tidak ditemukan');
+
+      // generate reset link dari Firebase
+      const resetLink =
+        await this.firebaseService.generatePasswordResetLink(email);
+
+      // opsional: simpan ke logs Supabase / kirim custom email
+      return {
+        message: 'Password reset link berhasil dibuat',
+        resetLink,
+      };
+  }
+  @Post('reset-password')
+    async resetPassword(
+      @Body() body: { oobCode: string; newPassword: string },
+    ) {
+      const { oobCode, newPassword } = body;
+      if (!oobCode || !newPassword)
+        throw new BadRequestException('oobCode dan password baru wajib diisi');
+
+      // verifikasi OOB code & set password baru
+      const fbUser = await this.firebaseService.confirmPasswordReset(
+        oobCode,
+        newPassword,
+      );
+
+      if (!fbUser?.email)
+        throw new BadRequestException('Gagal reset password');
+
+      return {
+        message: 'Password berhasil direset',
+        email: fbUser.email,
+      };
+    }
 }

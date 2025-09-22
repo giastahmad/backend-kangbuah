@@ -44,13 +44,12 @@ export class SupabaseService {
       .from('users')
       .select('*')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(`Supabase findUserByEmail error: ${error.message}`);
     return data;
   }
 
-  // ✅ Update status verifikasi
   async updateUserVerification(userId: string, isVerified: boolean) {
     const { data, error } = await this.supabase
       .from('users')
