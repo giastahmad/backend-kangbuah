@@ -17,6 +17,7 @@ export class UsersService {
                     user_id: true,
                     username: true,
                     email: true,
+                    role: true,
                     company_name: true,
                     npwp: true,
                     phone_number: true,

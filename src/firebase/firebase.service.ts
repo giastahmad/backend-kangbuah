@@ -2,13 +2,21 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import { JwtService } from '@nestjs/jwt';
+import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class FirebaseService {
   private readonly apiKey = process.env.FIREBASE_API_KEY;
   private firebaseAuth: admin.auth.Auth;
 
-  constructor() {
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    private jwtService: JwtService,
+  ) {
     if (admin.apps.length === 0) {
       admin.initializeApp({
         credential: admin.credential.applicationDefault(),
@@ -22,34 +30,35 @@ export class FirebaseService {
     return this.firebaseAuth.createUser({ email, password });
   }
 
-  async signInWithEmailAndPassword(email: string, password: string) {
-    try {
-      const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
-      const { data } = await axios.post(url, {
-        email,
-        password,
-        returnSecureToken: true,
-      });
+  // async signInWithEmailAndPassword(email: string, password: string) {
+  //   try {
+  //     const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
+  //     const { data } = await axios.post(url, {
+  //       email,
+  //       password,
+  //       returnSecureToken: true,
+  //     });
 
-      return {
-        uid: data.localId,
-        email: data.email,
-        idToken: data.idToken,
-        refreshToken: data.refreshToken,
-        emailVerified: data.emailVerified ?? false,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.response?.data?.error?.message || 'Login failed',
-        401,
-      );
-    }
-  }
+  //     return {
+  //       uid: data.localId,
+  //       email: data.email,
+  //       idToken: data.idToken,
+  //       refreshToken: data.refreshToken,
+  //       emailVerified: data.emailVerified ?? false,
+  //     };
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       error.response?.data?.error?.message || 'Login failed',
+  //       401,
+  //     );
+  //   }
+  // }
 
   // ========== VERIFIKASI EMAIL ==========
   async generateEmailVerificationLink(email: string) {
     return this.firebaseAuth.generateEmailVerificationLink(email);
   }
+
 
   async verifyEmailOobCode(oobCode: string) {
     try {
