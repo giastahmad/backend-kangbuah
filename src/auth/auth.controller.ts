@@ -27,9 +27,9 @@ interface DatabaseUser {
   username: string;
   password: string;
   role: UserRole;
-  company_name: string;
-  npwp: string;
-  phone_number: string;
+  company_name?: string;
+  npwp?: string;
+  phone_number?: string;
   created_at: Date;
   is_verified: boolean;
 }
@@ -123,17 +123,10 @@ export class AuthController {
       await this.supabaseService.updateUserVerification(dbUser.user_id, true);
     }
 
-    if (!dbUser.is_verified) {
-      throw new BadRequestException(
-        'Email belum diverifikasi. Silakan cek inbox Anda.',
-      );
-    }
-
     const { accessToken } = this.authService.generateCustomJwt(dbUser);
 
     return {
       accessToken: accessToken,
-      is_verified: dbUser.is_verified,
     };
   }
 
@@ -142,7 +135,7 @@ export class AuthController {
     const { oobCode } = body;
     if (!oobCode) throw new BadRequestException('oobCode wajib ada');
 
-    const data = await this.firebaseService.verifyEmailOobCode(oobCode);
+    const data = await this.firebaseService.verifyEmailOobCode(oobCode) as { email: string };
     const dbUser = await this.supabaseService.findUserByEmail(data.email);
     if (!dbUser) throw new BadRequestException('User tidak ditemukan');
 
@@ -201,7 +194,7 @@ export class AuthController {
     const fbUser = await this.firebaseService.confirmPasswordReset(
       oobCode,
       newPassword,
-    );
+    ) as {email?: string};
     return { message: 'Password berhasil direset', email: fbUser.email };
   }
 }

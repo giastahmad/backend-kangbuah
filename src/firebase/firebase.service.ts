@@ -9,6 +9,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+interface FirebaseSignInResponse {
+  kind: string;
+  localId: string;
+  email: string;
+  displayName?: string;
+  idToken: string;
+  registered: boolean;
+  refreshToken: string;
+  emailVerified?: boolean;
+}
+
 @Injectable()
 export class FirebaseService {
   private readonly apiKey = process.env.FIREBASE_API_KEY;
@@ -70,7 +81,7 @@ export class FirebaseService {
   async signInWithEmailAndPassword(email: string, password: string) {
     try {
       const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
-      const { data } = await axios.post(url, { email, password, returnSecureToken: true });
+      const { data } = await axios.post<FirebaseSignInResponse>(url, { email, password, returnSecureToken: true });
       return {
         uid: data.localId,
         email: data.email,
