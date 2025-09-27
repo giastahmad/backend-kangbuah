@@ -1,4 +1,3 @@
-// src/auth/auth.controller.ts
 import {
   Controller,
   Post,
@@ -7,10 +6,10 @@ import {
   Get,
   Request,
   UseGuards,
+  ConflictException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import { AuthService } from './auth.service';
 import { FirebaseService } from '../firebase/firebase.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { JwtAuthGuard } from './auth-guards/jwt-auth.guard'; // Buat guard ini
@@ -34,13 +33,14 @@ interface DatabaseUser {
   created_at: Date;
   is_verified: boolean;
 }
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
     private readonly firebaseService: FirebaseService,
     private readonly supabaseService: SupabaseService,
+    private readonly authService: AuthService,
   ) {}
 
   @Post('google/login')
@@ -55,18 +55,7 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(
-    @Body()
-    body: {
-      email: string;
-      password: string;
-      confirmPassword: string;
-      username?: string;
-      company_name?: string;
-      npwp?: string;
-      phone_number?: string;
-    },
-  ) {
+  async register(@Body() body: any) {
     const {
       email,
       password,
@@ -77,30 +66,32 @@ export class AuthController {
       phone_number,
     } = body;
 
+    // Validasi
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email))
-      throw new BadRequestException('Format email tidak valid');
+      throw new BadRequestException('Email tidak valid');
     if (!password || password.length < 6)
       throw new BadRequestException('Password minimal 6 karakter');
     if (password !== confirmPassword)
       throw new BadRequestException('Konfirmasi password tidak sama');
 
-    const fbUser: FirebaseUser = await this.firebaseService.createUser(
-      email,
-      password,
-    );
-    try {
-      console.log(`Mencoba membuat link verifikasi untuk: ${email}`);
-    const verificationLink =
-      await this.firebaseService.generateEmailVerificationLink(email);
-    console.log(`✅ Link berhasil dibuat oleh Firebase.`);
+    // Cek Supabase
+    const existing = await this.supabaseService.findUserByEmail(email);
+    if (existing) throw new ConflictException('Email sudah terdaftar');
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Buat akun Firebase
+    const fbUser = await this.firebaseService.createUser(email, password);
+
+    // Kirim email verifikasi
+    await this.firebaseService.sendVerificationEmail(email);
+
+    // Simpan ke Supabase
+    const hashed = await bcrypt.hash(password, 10);
     const newUser = await this.supabaseService.createUser({
       user_id: fbUser.uid,
       username: username || email.split('@')[0],
       email,
-      password: hashedPassword,
+      password: hashed,
       role: 'CUSTOMER',
       company_name,
       npwp,
@@ -110,31 +101,26 @@ export class AuthController {
     });
 
     return {
-      message: 'User created, verification email sent',
+      message: 'User berhasil dibuat. Cek email untuk verifikasi.',
       firebaseUid: fbUser.uid,
-      verificationLink,
       user: newUser,
     };
-    } catch (error) {
-      console.error('❌ GAGAL saat memanggil generateEmailVerificationLink:', error); 
-    }
   }
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
     const { email, password } = body;
 
-    const fbUser: { emailVerified: boolean } =
-      await this.authService.signInWithEmailAndPassword(email, password);
-    const dbUser: DatabaseUser =
-      await this.supabaseService.findUserByEmail(email);
-
+    const fbUser = await this.firebaseService.signInWithEmailAndPassword(
+      email,
+      password,
+    );
+    const dbUser = await this.supabaseService.findUserByEmail(email);
     if (!dbUser)
       throw new BadRequestException('User tidak ditemukan di database');
 
     if (fbUser.emailVerified && !dbUser.is_verified) {
       await this.supabaseService.updateUserVerification(dbUser.user_id, true);
-      dbUser.is_verified = true; // update object lokal
     }
 
     if (!dbUser.is_verified) {
@@ -156,26 +142,15 @@ export class AuthController {
     const { oobCode } = body;
     if (!oobCode) throw new BadRequestException('oobCode wajib ada');
 
-    const fbUser = (await this.firebaseService.verifyEmailOobCode(oobCode)) as {
-      email?: string;
-    };
-    if (!fbUser.email) {
-      throw new BadRequestException('Gagal verifikasi email');
-    }
-
-    const dbUser = await this.supabaseService.findUserByEmail(fbUser.email);
-    if (!dbUser)
-      throw new BadRequestException('User tidak ditemukan di database');
+    const data = await this.firebaseService.verifyEmailOobCode(oobCode);
+    const dbUser = await this.supabaseService.findUserByEmail(data.email);
+    if (!dbUser) throw new BadRequestException('User tidak ditemukan');
 
     if (!dbUser.is_verified) {
       await this.supabaseService.updateUserVerification(dbUser.user_id, true);
     }
 
-    return {
-      message: 'Email berhasil diverifikasi',
-      email: fbUser.email,
-      is_verified: true,
-    };
+    return { message: 'Email diverifikasi', email: data.email };
   }
 
   @Post('verify-email/resend')
@@ -201,7 +176,7 @@ export class AuthController {
 
     // 3. Jika user ada dan belum diverifikasi, buat link verifikasi BARU
     // Firebase akan otomatis mengirimkannya ke email tersebut
-    await this.firebaseService.generateEmailVerificationLink(email);
+    await this.firebaseService.sendVerificationEmail(email);
 
     return {
       message:
@@ -213,38 +188,20 @@ export class AuthController {
   async forgotPassword(@Body() body: { email: string }) {
     const { email } = body;
     if (!email) throw new BadRequestException('Email wajib diisi');
+    const user = await this.supabaseService.findUserByEmail(email);
+    if (!user) throw new BadRequestException('User tidak ditemukan');
 
-    // cek user di Supabase
-    const dbUser = await this.supabaseService.findUserByEmail(email);
-    if (!dbUser) throw new BadRequestException('User tidak ditemukan');
-
-    // generate reset link dari Firebase
-    const resetLink =
-      await this.firebaseService.generatePasswordResetLink(email);
-
-    // opsional: simpan ke logs Supabase / kirim custom email
-    return {
-      message: 'Password reset link berhasil dibuat',
-      resetLink,
-    };
+    const link = await this.firebaseService.generatePasswordResetLink(email);
+    return { message: 'Link reset password dibuat', link };
   }
+
   @Post('reset-password')
   async resetPassword(@Body() body: { oobCode: string; newPassword: string }) {
     const { oobCode, newPassword } = body;
-    if (!oobCode || !newPassword)
-      throw new BadRequestException('oobCode dan password baru wajib diisi');
-
-    // verifikasi OOB code & set password baru
-    const fbUser = (await this.firebaseService.confirmPasswordReset(
+    const fbUser = await this.firebaseService.confirmPasswordReset(
       oobCode,
       newPassword,
-    )) as { email?: String };
-
-    if (!fbUser?.email) throw new BadRequestException('Gagal reset password');
-
-    return {
-      message: 'Password berhasil direset',
-      email: fbUser.email,
-    };
+    );
+    return { message: 'Password berhasil direset', email: fbUser.email };
   }
 }

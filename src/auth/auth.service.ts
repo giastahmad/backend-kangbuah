@@ -58,38 +58,6 @@ export class AuthService {
     }
   }
 
-  async signInWithEmailAndPassword(email: string, password: string) {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
-    
-    try {
-      const response = await axios.post<FirebaseSignInResponse>(url, {
-        email,
-        password,
-        returnSecureToken: true,
-      });
-
-      const { localId } = response.data; 
-
-      const user = await this.usersRepository.findOneBy({ email: email });
-
-      if (!user) {
-        throw new UnauthorizedException('User tidak ditemukan di sistem.');
-      }
-
-      const jwt = this.generateCustomJwt(user);
-
-      return {
-        jwt,
-        emailVerified: response.data.emailVerified ?? false
-      }
-
-    } catch (error) {
-      console.log(error)
-      const errorMessage = error.response?.data?.error?.message || 'Email atau password salah.';
-      throw new HttpException(errorMessage, HttpStatus.UNAUTHORIZED);
-    }
-  }
-
   public generateCustomJwt(user: User) {
     const payload = {
       sub: user.user_id,
