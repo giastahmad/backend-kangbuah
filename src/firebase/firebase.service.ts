@@ -125,4 +125,25 @@ export class FirebaseService {
   async verifyIdToken(token: string) {
     return this.firebaseAuth.verifyIdToken(token);
   }
+  async sendPasswordResetEmail(email: string) {
+  try {
+    const link = await this.firebaseAuth.generatePasswordResetLink(email);
+    await this.transporter.sendMail({
+      from: `"KangBuah" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Reset Password - KangBuah',
+      html: `
+        <p>Halo,</p>
+        <p>Klik link berikut untuk reset password kamu:</p>
+        <p><a href="${link}" target="_blank">${link}</a></p>
+        <p>Jika kamu tidak meminta reset password, abaikan email ini.</p>
+      `,
+    });
+    console.log(`✅ Reset password email sent to ${email}`);
+    return link;
+  } catch (err) {
+    console.error('❌ Gagal kirim email reset password:', err);
+    throw new InternalServerErrorException('Gagal kirim email reset password');
+  }
+}
 }

@@ -14,6 +14,7 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { JwtAuthGuard } from './auth-guards/jwt-auth.guard'; // Buat guard ini
 import { UserRole } from 'src/users/entities/user.entity';
+import { MailService } from 'src/mail/mailer.service';
 
 interface FirebaseUser {
   uid: string;
@@ -41,6 +42,7 @@ export class AuthController {
     private readonly firebaseService: FirebaseService,
     private readonly supabaseService: SupabaseService,
     private readonly authService: AuthService,
+    private readonly mailService: MailService,
   ) {}
 
   @Post('google/login')
@@ -184,17 +186,7 @@ export class AuthController {
     const user = await this.supabaseService.findUserByEmail(email);
     if (!user) throw new BadRequestException('User tidak ditemukan');
 
-    const link = await this.firebaseService.generatePasswordResetLink(email);
-    return { message: 'Link reset password dibuat', link };
-  }
-
-  @Post('reset-password')
-  async resetPassword(@Body() body: { oobCode: string; newPassword: string }) {
-    const { oobCode, newPassword } = body;
-    const fbUser = await this.firebaseService.confirmPasswordReset(
-      oobCode,
-      newPassword,
-    ) as {email?: string};
-    return { message: 'Password berhasil direset', email: fbUser.email };
+    await this.firebaseService.sendPasswordResetEmail(email);
+    return { message: 'Email reset password telah dikirim' };
   }
 }
