@@ -1,4 +1,3 @@
-// src/chat/chat.service.ts
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,10 +6,12 @@ import { v4 as uuidv4 } from 'uuid';
 export class ChatService {
   constructor(private readonly supabase: SupabaseService) {}
 
-  // Buat room baru (1 customer + 1 admin)
-  async createRoom(customerId: string, adminId: string) {
-    const { data: existing, error: existingError } = await this.supabase
-      .getClient()
+  // Customer → semua admin
+  async createRoom(customerId: string) {
+    const client = this.supabase.getClient();
+
+    // Cek apakah customer sudah punya room
+    const { data: existing, error: existingError } = await client
       .from('chat_participants')
       .select('room_id')
       .eq('user_id', customerId)
@@ -19,32 +20,45 @@ export class ChatService {
     if (existingError) throw existingError;
     if (existing) return { room_id: existing.room_id };
 
-    const roomId = uuidv4();
+    // Ambil semua admin
+    const { data: admins, error: adminError } = await client
+      .from('users')
+      .select('user_id')
+      .eq('role', 'ADMIN');
 
-    const { error: roomError } = await this.supabase
-      .getClient()
+    if (adminError) throw adminError;
+    if (!admins || admins.length === 0)
+      throw new Error('Belum ada admin terdaftar');
+
+    // Buat room baru
+    const roomId = uuidv4();
+    const { error: roomError } = await client
       .from('chat_rooms')
       .insert([{ room_id: roomId, created_at: new Date() }]);
-
     if (roomError) throw roomError;
 
-    const { error: participantsError } = await this.supabase
-      .getClient()
+    // Insert peserta (customer + semua admin)
+    const participants = [
+      { participants_id: uuidv4(), room_id: roomId, user_id: customerId },
+      ...admins.map((a) => ({
+        participants_id: uuidv4(),
+        room_id: roomId,
+        user_id: a.user_id,
+      })),
+    ];
+
+    const { error: participantsError } = await client
       .from('chat_participants')
-      .insert([
-        { participants_id: uuidv4(), room_id: roomId, user_id: customerId },
-        { participants_id: uuidv4(), room_id: roomId, user_id: adminId },
-      ]);
+      .insert(participants);
 
     if (participantsError) throw participantsError;
 
     return { room_id: roomId };
   }
 
-  // Kirim pesan
   async sendMessage(roomId: string, senderId: string, message: string) {
-    const { data, error } = await this.supabase
-      .getClient()
+    const client = this.supabase.getClient();
+    const { data, error } = await client
       .from('chat_messages')
       .insert([
         {
@@ -62,17 +76,11 @@ export class ChatService {
     return data;
   }
 
-  // Ambil semua pesan dalam room
   async getMessages(roomId: string) {
-    const { data, error } = await this.supabase
-      .getClient()
+    const client = this.supabase.getClient();
+    const { data, error } = await client
       .from('chat_messages')
-      .select(`
-        message_id,
-        message_content,
-        user_id,
-        timestamp
-      `)
+      .select('message_id,message_content,user_id,timestamp')
       .eq('room_id', roomId)
       .order('timestamp', { ascending: true });
 
@@ -80,23 +88,24 @@ export class ChatService {
     return data;
   }
 
-  // Admin: list semua chat (customer + room)
   async listCustomerChats(adminId: string) {
-    const { data: adminRooms, error: adminError } = await this.supabase
-      .getClient()
+    const client = this.supabase.getClient();
+
+    // Ambil semua room admin
+    const { data: rooms, error: roomError } = await client
       .from('chat_participants')
-      .select('room_id')
+      .select('room_id,user_id')
       .eq('user_id', adminId);
 
-    if (adminError) throw adminError;
-    if (!adminRooms || adminRooms.length === 0) return [];
+    if (roomError) throw roomError;
+    if (!rooms || rooms.length === 0) return [];
 
-    const roomIds = adminRooms.map((r) => r.room_id);
+    const roomIds = rooms.map((r) => r.room_id);
 
-    const { data: customers, error: custError } = await this.supabase
-      .getClient()
+    // Ambil customer per room
+    const { data: customers, error: custError } = await client
       .from('chat_participants')
-      .select('room_id, user_id')
+      .select('room_id,user_id')
       .in('room_id', roomIds)
       .neq('user_id', adminId);
 

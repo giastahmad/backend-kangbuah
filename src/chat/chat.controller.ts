@@ -1,4 +1,3 @@
-// src/chat/chat.controller.ts
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { ChatService } from './chat.service';
 
@@ -6,9 +5,10 @@ import { ChatService } from './chat.service';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
+  // Customer kirim pesan → otomatis ke semua admin
   @Post('create-room')
-  async createRoom(@Body() body: { customerId: string; adminId: string }) {
-    return this.chatService.createRoom(body.customerId, body.adminId);
+  async createRoom(@Body() body: { customerId: string }) {
+    return this.chatService.createRoom(body.customerId);
   }
 
   @Post('send')
@@ -27,6 +27,7 @@ export class ChatController {
     return this.chatService.getMessages(roomId);
   }
 
+  // Admin list semua customer
   @Get('list/:adminId')
   async listCustomerChats(@Param('adminId') adminId: string) {
     return this.chatService.listCustomerChats(adminId);
