@@ -10,6 +10,7 @@ import { ChatModule } from './chat/chat.module';
 import { UsersModule } from './users/users.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { FirebaseModule } from './firebase/firebase.module'; 
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     OrdersModule,
     ChatModule,
     UsersModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

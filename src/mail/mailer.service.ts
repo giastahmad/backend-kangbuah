@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -8,16 +8,11 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    console.log('=================📧 MAIL CONFIG DEBUG =================');
-    console.log('EMAIL_USER:', process.env.EMAIL_USER || '❌ undefined');
-    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Loaded' : '❌ Missing');
-    console.log('=======================================================');
-
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
   }
@@ -26,7 +21,7 @@ export class MailService {
     try {
       console.log(`📨 Sending email to: ${to}`);
       const info = await this.transporter.sendMail({
-        from: `"KangBuah" <${process.env.EMAIL_USER}>`,
+        from: `"KangBuah" <${process.env.SMTP_USER}>`,
         to,
         subject,
         html,
@@ -35,7 +30,7 @@ export class MailService {
       return info;
     } catch (err) {
       console.error('❌ Error sending email:', err);
-      throw err;
+      throw new InternalServerErrorException('Gagal kirim email');
     }
   }
 }
