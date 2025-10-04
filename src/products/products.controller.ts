@@ -10,7 +10,9 @@ import {
   Post,
   Query,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductStatus, ProductType } from './entities/product.entity';
@@ -20,6 +22,7 @@ import { Roles } from 'src/auth/decorators/role.decorator';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/auth-guards/optional-jwt-auth.guard';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductsController {
@@ -28,8 +31,12 @@ export class ProductsController {
   @Post()
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('ADMIN')
-  async create(@Body() createProductDto: CreateProductDto) {
-    return await this.productsService.create(createProductDto);
+  @UseInterceptors(FilesInterceptor('image', 5))
+  async create(
+    @Body() createProductDto: CreateProductDto,
+    @UploadedFile() files: Array<Express.Multer.File>
+  ) {
+    return await this.productsService.create(createProductDto, files);
   }
 
   @Get()
@@ -66,10 +73,12 @@ export class ProductsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('ADMIN')
+  @UseInterceptors(FilesInterceptor('image', 5))
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
+    @UploadedFile() files: Array<Express.Multer.File>
   ) {
-    return await this.productsService.update(id, updateProductDto);
+    return await this.productsService.update(id, updateProductDto, files);
   }
 }

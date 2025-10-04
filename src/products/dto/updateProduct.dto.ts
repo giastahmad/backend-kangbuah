@@ -46,4 +46,9 @@ export class UpdateProductDto {
     @IsUrl({}, {each: true})
     @IsOptional()
     image_url?: string[]
+
+    @IsArray()
+    @IsUrl({}, {each: true})
+    @IsOptional()
+    existing_image_url?: string[];
 }
