@@ -1,4 +1,6 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { Order } from '../../orders/entities/order.entity'
+import { Address } from './address.entity';
 
 export type UserRole = 'CUSTOMER' | 'ADMIN';
 
@@ -25,7 +27,7 @@ export class User {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   company_name: string;
-  
+
   @Column({ type: 'varchar', length: 50, nullable: true })
   npwp: string;
 
@@ -35,6 +37,14 @@ export class User {
   @CreateDateColumn({ type: 'timestamp with time zone' })
   created_at: Date;
 
-  @Column({ type: 'bool'})
+  @Column({ type: 'bool' })
   is_verified: boolean;
+
+  //Relation
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses: Address[];
 }

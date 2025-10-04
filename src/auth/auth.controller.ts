@@ -117,7 +117,10 @@ export class AuthController {
       email,
       password,
     );
+
     const dbUser = await this.supabaseService.findUserByEmail(email);
+    // const dbUser = await this.authService.findUserById(fbUser.uid);
+ 
     if (!dbUser)
       throw new BadRequestException('User tidak ditemukan di database');
 
@@ -125,11 +128,7 @@ export class AuthController {
       await this.supabaseService.updateUserVerification(dbUser.user_id, true);
     }
 
-    const { accessToken } = this.authService.generateCustomJwt(dbUser);
-
-    return {
-      accessToken: accessToken,
-    };
+    return this.authService.generateCustomJwt(dbUser);
   }
 
   @Post('verify-email')

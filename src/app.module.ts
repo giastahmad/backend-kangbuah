@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { FirebaseModule } from './firebase/firebase.module'; 
 import { MailModule } from './mail/mail.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { MailModule } from './mail/mail.module';
     ChatModule,
     UsersModule,
     MailModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
