@@ -1,11 +1,12 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { Order } from "./order.entity";
+import { Product } from "src/products/entities/product.entity";
 
 @Entity({name: 'order_details'})
 export class OrderDetail{
 
     @PrimaryColumn({type: 'varchar'})
-    oder_detail_id: string
+    order_detail_id: string
 
     @Column({type: 'varchar'})
     order_id: string
@@ -22,5 +23,10 @@ export class OrderDetail{
     //Relation
 
     @ManyToOne(() => Order, (order) => order.order_details)
+    @JoinColumn({ name: 'order_id' })
     order: Order;
+
+    @ManyToOne(() => Product)
+    @JoinColumn({ name: 'product_id' })
+    product: Product;
 }

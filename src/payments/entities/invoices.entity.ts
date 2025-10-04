@@ -29,8 +29,8 @@ export class Invoice{
     @Column({type: 'varchar'})
     billing_address_id: string
 
-    @CreateDateColumn({type: 'timestamp with time zone'})
-    invoice_date: string
+    @Column({ type: 'date' })
+    invoice_date: Date
 
     @Column({type: 'decimal', precision: 10, scale: 2})
     total_price: number
@@ -52,6 +52,6 @@ export class Invoice{
     user: User
 
     @ManyToOne(() => Address)
-    @JoinColumn({name: 'address_id'})
+    @JoinColumn({name: 'billing_address_id'})
     address_id: Address
 }

@@ -17,7 +17,7 @@ export class MailService {
     });
   }
 
-  async sendMail(to: string, subject: string, html: string) {
+  async sendMail(to: string, subject: string, html: string, attachments: any[] = []) {
     try {
       console.log(`📨 Sending email to: ${to}`);
       const info = await this.transporter.sendMail({
@@ -25,6 +25,7 @@ export class MailService {
         to,
         subject,
         html,
+        attachments
       });
       console.log('✅ Email sent:', info.messageId);
       return info;
