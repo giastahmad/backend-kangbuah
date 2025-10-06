@@ -6,12 +6,14 @@ import { Order } from 'src/orders/entities/order.entity';
 import { Invoice } from './entities/invoices.entity';
 import { MailModule } from 'src/mail/mail.module';
 import { OrdersModule } from 'src/orders/orders.module';
+import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, Invoice]),
     MailModule,
-    OrdersModule
+    OrdersModule,
+    SupabaseModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService]
