@@ -1,4 +1,4 @@
-import { Injectable, HttpException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, HttpException, InternalServerErrorException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as nodemailer from 'nodemailer';
 import axios from 'axios';
@@ -82,18 +82,37 @@ export class FirebaseService {
     try {
       const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
       const { data } = await axios.post<FirebaseSignInResponse>(url, { email, password, returnSecureToken: true });
+
+      const decodedToken = await this.firebaseAuth.verifyIdToken(data.idToken);
+
+      if (!decodedToken.email_verified) {
+        throw new ForbiddenException(
+          'Email Anda belum diverifikasi. Silakan cek inbox untuk melakukan verifikasi.',
+        );
+      }
+      
       return {
         uid: data.localId,
         email: data.email,
         idToken: data.idToken,
-        refreshToken: data.refreshToken,
-        emailVerified: data.emailVerified ?? false,
+        refreshToken: data.refreshToken
       };
     } catch (error) {
-      throw new HttpException(
-        error.response?.data?.error?.message || 'Login gagal',
-        401,
-      );
+      if (error instanceof ForbiddenException){
+        throw error;
+      }
+
+      const firebaseErrorMessage = error.response?.data?.error?.message;
+      console.error('Firebase sign-in error:', firebaseErrorMessage);
+
+      if (
+        firebaseErrorMessage === 'INVALID_LOGIN_CREDENTIALS' ||
+        firebaseErrorMessage === 'INVALID_PASSWORD' ||
+        firebaseErrorMessage === 'EMAIL_NOT_FOUND'
+      ) {
+        throw new UnauthorizedException('Email atau password yang Anda masukkan salah.');
+      }
+      throw new InternalServerErrorException('Terjadi kesalahan saat mencoba login.');
     }
   }
 

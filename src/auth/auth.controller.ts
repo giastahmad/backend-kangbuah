@@ -120,13 +120,12 @@ export class AuthController {
 
     const dbUser = await this.supabaseService.findUserByEmail(email);
     // const dbUser = await this.authService.findUserById(fbUser.uid);
- 
-    if (!dbUser)
-      throw new BadRequestException('User tidak ditemukan di database');
 
-    if (fbUser.emailVerified && !dbUser.is_verified) {
-      await this.supabaseService.updateUserVerification(dbUser.user_id, true);
+    if (!dbUser) {
+      throw new BadRequestException('User tidak ditemukan di database');
     }
+
+    await this.supabaseService.updateUserVerification(dbUser.user_id, true);
 
     return this.authService.generateCustomJwt(dbUser);
   }
@@ -136,7 +135,9 @@ export class AuthController {
     const { oobCode } = body;
     if (!oobCode) throw new BadRequestException('oobCode wajib ada');
 
-    const data = await this.firebaseService.verifyEmailOobCode(oobCode) as { email: string };
+    const data = (await this.firebaseService.verifyEmailOobCode(oobCode)) as {
+      email: string;
+    };
     const dbUser = await this.supabaseService.findUserByEmail(data.email);
     if (!dbUser) throw new BadRequestException('User tidak ditemukan');
 
