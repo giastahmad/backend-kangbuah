@@ -11,6 +11,7 @@ import {
   Query,
   Request,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -34,8 +35,11 @@ export class ProductsController {
   @UseInterceptors(FilesInterceptor('image', 5))
   async create(
     @Body() createProductDto: CreateProductDto,
-    @UploadedFile() files: Array<Express.Multer.File>
+    @UploadedFiles() files: Array<Express.Multer.File>
   ) {
+    console.log('Received DTO:', createProductDto);
+  console.log('Received Files:', files);
+
     return await this.productsService.create(createProductDto, files);
   }
 
@@ -77,7 +81,7 @@ export class ProductsController {
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @UploadedFile() files: Array<Express.Multer.File>
+    @UploadedFiles() files: Array<Express.Multer.File>
   ) {
     return await this.productsService.update(id, updateProductDto, files);
   }

@@ -41,7 +41,7 @@ export class ProductsService {
     const imageUrls: string[] = [];
 
     const uploadPromises = files.map((file) => {
-      const newFileName = `${Date.now}-${file.originalname}`;
+      const newFileName = `${Date.now()}-${file.originalname}`;
       return supabaseClient.storage
         .from('product-images')
         .upload(newFileName, file.buffer, { contentType: file.mimetype });
@@ -162,7 +162,7 @@ export class ProductsService {
     const newImages: string[] = [];
     if(files && files.length > 0){
       const uploadPromise = files.map(file => {
-        const newFileName = `${Date.now}-${file.originalname}`;
+        const newFileName = `${Date.now()}-${file.originalname}`;
         return supabaseClient.storage.from('product-images').upload(newFileName, file.buffer, {contentType: file.mimetype});
       });
       const uploadResult = await Promise.all(uploadPromise);

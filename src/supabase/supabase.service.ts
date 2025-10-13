@@ -9,7 +9,7 @@ export class SupabaseService {
   constructor() {
     this.supabase = createClient(
       process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_KEY!,
     );
   }
 
@@ -46,7 +46,8 @@ export class SupabaseService {
       .eq('email', email)
       .maybeSingle();
 
-    if (error) throw new Error(`Supabase findUserByEmail error: ${error.message}`);
+    if (error)
+      throw new Error(`Supabase findUserByEmail error: ${error.message}`);
     return data;
   }
 
@@ -58,7 +59,10 @@ export class SupabaseService {
       .select()
       .single();
 
-    if (error) throw new Error(`Supabase updateUserVerification error: ${error.message}`);
+    if (error)
+      throw new Error(
+        `Supabase updateUserVerification error: ${error.message}`,
+      );
     return data;
   }
 }

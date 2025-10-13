@@ -12,11 +12,14 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { FirebaseModule } from './firebase/firebase.module'; 
 import { MailModule } from './mail/mail.module';
 import { PaymentsModule } from './payments/payments.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-
+    MulterModule.register({
+      dest: './uploads', 
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

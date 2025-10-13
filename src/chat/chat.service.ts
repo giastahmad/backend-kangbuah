@@ -91,26 +91,75 @@ export class ChatService {
   async listCustomerChats(adminId: string) {
     const client = this.supabase.getClient();
 
-    // Ambil semua room admin
-    const { data: rooms, error: roomError } = await client
+    // Langkah 1: Ambil semua room ID tempat admin menjadi partisipan (Tidak berubah)
+    const { data: adminRooms, error: roomError } = await client
       .from('chat_participants')
-      .select('room_id,user_id')
+      .select('room_id')
       .eq('user_id', adminId);
 
     if (roomError) throw roomError;
-    if (!rooms || rooms.length === 0) return [];
+    if (!adminRooms || adminRooms.length === 0) return [];
 
-    const roomIds = rooms.map((r) => r.room_id);
+    const roomIds = adminRooms.map((r) => r.room_id);
 
-    // Ambil customer per room
-    const { data: customers, error: custError } = await client
+    // Langkah 2 (Refactored): Ambil SEMUA partisipan dari room tersebut (tanpa join)
+    const { data: allParticipants, error: participantsError } = await client
       .from('chat_participants')
-      .select('room_id,user_id')
+      .select('room_id, user_id')
+      .in('room_id', roomIds);
+
+    if (participantsError) throw participantsError;
+    if (!allParticipants || allParticipants.length === 0) return [];
+
+    // Ekstrak semua user ID dari partisipan
+    const allUserIds = allParticipants.map((p) => p.user_id);
+
+    // Langkah 3 (Baru): Ambil detail SEMUA user yang terlibat dalam satu query
+    const { data: users, error: usersError } = await client
+      .from('users')
+      .select('user_id, username, role')
+      .in('user_id', allUserIds);
+
+    if (usersError) throw usersError;
+
+    // Buat Peta (Map) untuk data user agar mudah diakses: user_id -> { username, role }
+    const userMap = new Map(
+      users.map((u) => [u.user_id, { username: u.username, role: u.role }]),
+    );
+
+    // Langkah 4: Ambil pesan terakhir untuk setiap room (Tidak berubah)
+    const { data: lastMessages, error: messagesError } = await client
+      .from('chat_messages')
+      .select('room_id, message_content, timestamp')
       .in('room_id', roomIds)
-      .neq('user_id', adminId);
+      .order('timestamp', { ascending: false });
 
-    if (custError) throw custError;
+    if (messagesError) throw messagesError;
+    const lastMessageMap = new Map();
+    if (lastMessages) {
+      for (const msg of lastMessages) {
+        if (!lastMessageMap.has(msg.room_id)) {
+          lastMessageMap.set(msg.room_id, msg.message_content);
+        }
+      }
+    }
 
-    return customers;
+    // Langkah 5: Gabungkan semua data dengan logika di TypeScript
+    const customerChats = new Map();
+    for (const participant of allParticipants) {
+      const userDetails = userMap.get(participant.user_id);
+
+      // Proses hanya jika user adalah CUSTOMER
+      if (userDetails && userDetails.role === 'CUSTOMER') {
+        customerChats.set(participant.room_id, {
+          id: participant.room_id,
+          name: userDetails.username,
+          last: lastMessageMap.get(participant.room_id) || 'Belum ada pesan.',
+          unread: 0,
+        });
+      }
+    }
+
+    return Array.from(customerChats.values());
   }
 }
