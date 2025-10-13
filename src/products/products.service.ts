@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product, ProductStatus, ProductType } from './entities/product.entity';
-import { In, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteResult } from 'typeorm/browser';
@@ -82,45 +82,56 @@ export class ProductsService {
   }
 
   async findAll(option: {
-    page: number;
-    limit: number;
-    status?: ProductStatus[];
-    type?: ProductType[];
-    isAdmin: boolean;
-  }) {
-    const take = option.limit || 10;
-    const skip = (option.page - 1) * take;
+  page: number;
+  limit: number;
+  status?: ProductStatus[];
+  type?: ProductType;
+  isAdmin: boolean;
+  search?: string;  
+  sortBy?: string; 
+  order?: 'ASC' | 'DESC'; 
+}) {
+  const take = option.limit || 10;
+  const skip = (option.page - 1) * take;
+  const where: any = {};
 
-    const where: any = {};
-    console.log('isAdmin in service:', option.isAdmin);
-
-    if (!option.isAdmin) {
-      where.status = 'TERSEDIA';
-    } else if (option.isAdmin && option.status) {
-      const statuses = Array.isArray(option.status)
-        ? option.status
-        : [option.status];
-      where.status = In(statuses);
-    }
-
-    if (option.type) {
-      const types = Array.isArray(option.type) ? option.type : [option.type];
-      where.type = In(types);
-    }
-
-    const [result, total] = await this.productsRepository.findAndCount({
-      take: take,
-      skip: skip,
-      where: where,
-    });
-
-    return {
-      result: result,
-      page: option.page,
-      max_page: Math.ceil(total / option.limit),
-      total: total,
-    };
+  
+  if (!option.isAdmin) {
+    where.status = ProductStatus.TERSEDIA;
+  } else if (option.isAdmin && option.status) {
+    where.status = In(Array.isArray(option.status) ? option.status : [option.status]);
   }
+
+  if (option.type) {
+    where.type = option.type;
+  }
+
+  if (option.search) {
+    where.name = Like(`%${option.search}%`);
+  }
+
+ 
+  const orderOptions: any = {};
+  if (option.sortBy) {
+    orderOptions[option.sortBy] = option.order || 'ASC';
+  } else {
+    orderOptions['name'] = 'ASC'; 
+  }
+
+  const [result, total] = await this.productsRepository.findAndCount({
+    take: take,
+    skip: skip,
+    where: where,
+    order: orderOptions,
+  });
+
+  return {
+    data: result, 
+    page: option.page,
+    max_page: Math.ceil(total / take),
+    total: total,
+  };
+}
 
   async delete(id: string) {
     const product = await this.productsRepository.findOneBy({product_id: id});

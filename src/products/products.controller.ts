@@ -44,28 +44,30 @@ export class ProductsController {
   }
 
   @Get()
-  @UseGuards(OptionalJwtAuthGuard)
-  async findAll(
-    @Request() req,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('status') status?: ProductStatus[],
-    @Query('type') type?: ProductType[],
-  ) {
-    console.log('req.user:', req.user);
-    console.log('user role:', req.user?.role);
+@UseGuards(OptionalJwtAuthGuard)
+async findAll(
+  @Request() req,
+  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  @Query('status') status?: ProductStatus[],
+  @Query('type') type?: ProductType, 
+  @Query('search') search?: string, 
+  @Query('sortBy') sortBy?: string,   
+  @Query('order') order?: 'ASC' | 'DESC',
+) {
+  const isAdmin = req.user?.role === 'ADMIN';
 
-    const isAdmin = req.user?.role == 'ADMIN';
-    console.log('isAdmin: ', isAdmin);
-
-    return await this.productsService.findAll({
-      page,
-      limit,
-      status,
-      type,
-      isAdmin,
-    });
-  }
+  return await this.productsService.findAll({
+    page,
+    limit,
+    status,
+    type,
+    isAdmin,
+    search,
+    sortBy,
+    order,
+  });
+}
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
