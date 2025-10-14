@@ -7,6 +7,7 @@ import { Product } from '../products/entities/product.entity';
 import { User } from '../users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { Address, AddressesType } from '../users/entities/address.entity';
+import { format } from 'date-fns';
 
 @Injectable()
 export class OrdersService {
@@ -34,11 +35,9 @@ export class OrdersService {
     }
 
   async getUserForm(userId: string) {
-    // 🔹 1. Ambil data user
     const user = await this.userRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException('User tidak ditemukan');
 
-    // 🔹 2. Ambil alamat pengiriman terakhir
     const lastAddress = await this.addressRepo.findOne({
       where: {
         user_id: userId,
@@ -63,8 +62,6 @@ export class OrdersService {
         : null,
     };
   }
-
-
 
   async createOrder(
     userId: string,
@@ -187,16 +184,25 @@ export class OrdersService {
   async updateOrderStatus(orderId: string, status: OrderStatus) {
     const order = await this.orderRepo.findOne({ where: { order_id: orderId } });
     if (!order) throw new NotFoundException('Pesanan tidak ditemukan');
+
     order.status = status;
+
+    // 🔹 Jika status berubah ke DALAM_PENGIRIMAN, isi otomatis tanggal & waktu sekarang
+    if (status === OrderStatus.DALAM_PENGIRIMAN) {
+      const now = new Date();
+      order.delivery_date = now;
+      order.delivery_time = format(now, 'HH:mm'); // contoh: "10:35"
+    }
+
     return this.orderRepo.save(order);
   }
 
-  async getAllOrders() {
-    return this.orderRepo.find({
-      relations: ['user', 'order_details', 'order_details.product'],
-      order: { order_date: 'DESC' },
-    });
-  }
+    async getAllOrders() {
+      return this.orderRepo.find({
+        relations: ['user', 'order_details', 'order_details.product'],
+        order: { order_date: 'DESC' },
+      });
+    }
 
   async getUserOrders(userId: string) {
     return this.orderRepo.find({
