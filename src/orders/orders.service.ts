@@ -79,13 +79,19 @@ export class OrdersService {
       await this.userRepo.save(user);
     }
 
+    let poNumber = formData?.po_number;
+    if (!poNumber) {
+      const timestamp = Date.now().toString().slice(-6); 
+      poNumber = `PO-${userId.slice(0, 4).toUpperCase()}-${timestamp}`;
+    }
+
     let deliveryAddressId = formData?.delivery_address_id;
 
     if (!deliveryAddressId) {
       const addressData = formData?.delivery_address;
       if (!addressData) {
         throw new BadRequestException(
-          'Jika tidak mengirim delivery_address_id, maka delivery_address harus diisi.'
+          'Jika tidak mengirim delivery_address_id, maka delivery_address harus diisi.',
         );
       }
 
@@ -119,9 +125,11 @@ export class OrdersService {
       }
     }
 
+    // 🔹 Tambahkan po_number ke dalam order
     const order = this.orderRepo.create({
       order_id: uuidv4(),
       user_id: userId,
+      po_number: poNumber,
       delivery_address_id: deliveryAddressId,
       order_date: new Date(),
       total_price: 0,
@@ -168,6 +176,7 @@ export class OrdersService {
     };
   }
 
+
   async getTotalOrderPrice(orderId: string) {
     const order = await this.orderRepo.findOne({ where: { order_id: orderId } });
     if (!order) throw new NotFoundException('Pesanan tidak ditemukan');
@@ -187,11 +196,10 @@ export class OrdersService {
 
     order.status = status;
 
-    // 🔹 Jika status berubah ke DALAM_PENGIRIMAN, isi otomatis tanggal & waktu sekarang
     if (status === OrderStatus.DALAM_PENGIRIMAN) {
       const now = new Date();
       order.delivery_date = now;
-      order.delivery_time = format(now, 'HH:mm'); // contoh: "10:35"
+      order.delivery_time = format(now, 'HH:mm'); 
     }
 
     return this.orderRepo.save(order);
