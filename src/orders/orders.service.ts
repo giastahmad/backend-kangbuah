@@ -34,14 +34,36 @@ export class OrdersService {
     }
 
   async getUserForm(userId: string) {
+    // 🔹 1. Ambil data user
     const user = await this.userRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException('User tidak ditemukan');
+
+    // 🔹 2. Ambil alamat pengiriman terakhir
+    const lastAddress = await this.addressRepo.findOne({
+      where: {
+        user_id: userId,
+        type: AddressesType.DELIVERY,
+      },
+      order: { address_id: 'DESC' }, 
+    });
+
     return {
       npwp: user.npwp ?? null,
       company_name: user.company_name ?? null,
       phone_number: user.phone_number ?? null,
+      delivery_address: lastAddress
+        ? {
+            street: lastAddress.street,
+            city: lastAddress.city,
+            province: lastAddress.province,
+            postal_code: lastAddress.postal_code,
+            pic_name: lastAddress.pic_name,
+            address_id: lastAddress.address_id,
+          }
+        : null,
     };
   }
+
 
 
   async createOrder(
