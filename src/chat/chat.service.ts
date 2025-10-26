@@ -80,7 +80,7 @@ export class ChatService {
     const client = this.supabase.getClient();
     const { data, error } = await client
       .from('chat_messages')
-      .select('message_id,message_content,user_id,timestamp')
+      .select('message_id,message_content,user_id,timestamp,users(username,role)')
       .eq('room_id', roomId)
       .order('timestamp', { ascending: true });
 
@@ -154,7 +154,7 @@ export class ChatService {
         customerChats.set(participant.room_id, {
           id: participant.room_id,
           name: userDetails.username,
-          last: lastMessageMap.get(participant.room_id) || 'Belum ada pesan.',
+          last: lastMessageMap.get(participant.room_id) || '',
           unread: 0,
         });
       }
