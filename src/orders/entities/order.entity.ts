@@ -85,7 +85,7 @@ export class Order {
 
   @ManyToOne(() => Address)
   @JoinColumn({ name: 'delivery_address_id' })
-  address_id: Address;
+  delivery_address: Address;
 
   @OneToMany(() => OrderDetail, (detail) => detail.order)
   order_details: OrderDetail[];

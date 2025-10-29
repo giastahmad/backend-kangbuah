@@ -35,39 +35,39 @@ export class ProductsController {
   @UseInterceptors(FilesInterceptor('image', 5))
   async create(
     @Body() createProductDto: CreateProductDto,
-    @UploadedFiles() files: Array<Express.Multer.File>
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     console.log('Received DTO:', createProductDto);
-  console.log('Received Files:', files);
+    console.log('Received Files:', files);
 
     return await this.productsService.create(createProductDto, files);
   }
 
   @Get()
-@UseGuards(OptionalJwtAuthGuard)
-async findAll(
-  @Request() req,
-  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  @Query('status') status?: ProductStatus[],
-  @Query('type') type?: ProductType, 
-  @Query('search') search?: string, 
-  @Query('sortBy') sortBy?: string,   
-  @Query('order') order?: 'ASC' | 'DESC',
-) {
-  const isAdmin = req.user?.role === 'ADMIN';
+  @UseGuards(OptionalJwtAuthGuard)
+  async findAll(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('status') status?: ProductStatus[],
+    @Query('type') type?: ProductType,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: 'ASC' | 'DESC',
+  ) {
+    const isAdmin = req.user?.role === 'ADMIN';
 
-  return await this.productsService.findAll({
-    page,
-    limit,
-    status,
-    type,
-    isAdmin,
-    search,
-    sortBy,
-    order,
-  });
-}
+    return await this.productsService.findAll({
+      page,
+      limit,
+      status,
+      type,
+      isAdmin,
+      search,
+      sortBy,
+      order,
+    });
+  }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
@@ -83,7 +83,7 @@ async findAll(
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @UploadedFiles() files: Array<Express.Multer.File>
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return await this.productsService.update(id, updateProductDto, files);
   }

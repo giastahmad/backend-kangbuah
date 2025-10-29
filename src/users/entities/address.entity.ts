@@ -20,6 +20,9 @@ export class Address{
     @Column({type: 'text'})
     street: string
 
+    @Column({type: 'varchar', nullable: true})
+    ward: string
+
     @Column({type: 'varchar'})
     city: string
 

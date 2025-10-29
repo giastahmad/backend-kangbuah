@@ -232,4 +232,32 @@ export class ProductsService {
 
     return this.productsRepository.save(product);
   }
+
+  async updateStock(productId: string, quantitySold: number) {
+    const product = await this.productsRepository.findOneBy({
+      product_id: productId,
+    });
+    if (!product) {
+      throw new NotFoundException(`Produk ${productId} tidak ditemukan`);
+    }
+    if (product.stock < quantitySold) {
+      throw new BadRequestException(
+        `Stok produk ${product.name} tidak mencukupi`,
+      );
+    }
+    
+    product.stock -= quantitySold;
+    
+    if (product.status !== ProductStatus.TIDAK_AKTIF) {
+      if (product.stock <= 0) {
+        product.status = ProductStatus.STOK_HABIS;
+      } else if (product.stock > 0 && product.stock <= 10) {
+        product.status = ProductStatus.STOK_MENIPIS;
+      } else {
+        product.status = ProductStatus.TERSEDIA;
+      }
+    }
+    
+    return this.productsRepository.save(product);
+  }
 }

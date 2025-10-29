@@ -13,6 +13,7 @@ import { MulterModule } from '@nestjs/platform-express';
     MulterModule,
   ],
   providers: [ProductsService],
-  controllers: [ProductsController]
+  controllers: [ProductsController],
+  exports: [ProductsService],
 })
 export class ProductsModule {}
