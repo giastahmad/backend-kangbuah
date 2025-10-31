@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Param, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Patch, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrderStatus } from './entities/order.entity';
+import { JwtAuthGuard } from 'src/auth/auth-guards/jwt-auth.guard';
 
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+
+  @Get('list')
+  getAllOrders() {
+    return this.ordersService.getAllOrders();
+  }
 
   @Get('form/:userId')
   getUserForm(@Param('userId') userId: string) {
@@ -40,9 +46,12 @@ export class OrdersController {
     return this.ordersService.updateOrderStatus(orderId, status);
   }
 
-  @Get('list')
-  getAllOrders() {
-    return this.ordersService.getAllOrders();
+  @Get(':orderId')
+  @UseGuards(JwtAuthGuard)
+  getOrderById(
+    @Param('orderId') orderId: string
+  ){
+    return this.ordersService.getOrderById(orderId);
   }
 
   @Get('history/:userId')

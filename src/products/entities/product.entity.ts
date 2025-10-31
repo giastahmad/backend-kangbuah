@@ -1,4 +1,5 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { OrderDetail } from 'src/orders/entities/orderDetail.entity';
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
 
 // export type ProductType = 'BUAH' | 'SAYUR' | 'LAIN_LAIN';
 // export type ProductStatus = 'TERSEDIA' | 'STOK_HABIS' | 'TIDAK_AKTIF';
@@ -51,4 +52,9 @@ export class Product {
 
   @Column({ type: 'text', nullable: true, array: true })
   image_url: string[];
+
+  // Relation
+
+  @OneToMany(() => OrderDetail, (detail) => detail.product)
+  order_details: OrderDetail[];
 }

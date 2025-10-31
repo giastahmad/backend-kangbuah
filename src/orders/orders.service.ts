@@ -234,6 +234,19 @@ export class OrdersService {
     });
   }
 
+  async getOrderById(orderId: string) {
+    const order = await this.orderRepo.findOne({
+      where: { order_id: orderId },
+      relations: ['order_details', 'order_details.product', 'delivery_address'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order dengan ID ${orderId} tidak ditemukan`);
+    }
+
+    return order;
+  }
+
   async getUserOrders(userId: string) {
     return this.orderRepo.find({
       where: { user_id: userId },

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product, ProductStatus, ProductType } from './entities/product.entity';
-import { In, Like, Not, Repository } from 'typeorm';
+import { ILike, In, Like, Not, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { DeleteResult } from 'typeorm/browser';
@@ -112,7 +112,7 @@ export class ProductsService {
     }
 
     if (option.search) {
-      where.name = Like(`%${option.search}%`);
+      where.name = ILike(`%${option.search}%`);
     }
 
     const orderOptions: any = {};
