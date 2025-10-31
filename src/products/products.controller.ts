@@ -37,9 +37,6 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    console.log('Received DTO:', createProductDto);
-    console.log('Received Files:', files);
-
     return await this.productsService.create(createProductDto, files);
   }
 

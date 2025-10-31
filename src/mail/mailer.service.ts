@@ -19,7 +19,6 @@ export class MailService {
 
   async sendMail(to: string, subject: string, html: string, attachments: any[] = []) {
     try {
-      console.log(`📨 Sending email to: ${to}`);
       const info = await this.transporter.sendMail({
         from: `"KangBuah" <${process.env.SMTP_USER}>`,
         to,
@@ -27,7 +26,6 @@ export class MailService {
         html,
         attachments
       });
-      console.log('✅ Email sent:', info.messageId);
       return info;
     } catch (err) {
       console.error('❌ Error sending email:', err);

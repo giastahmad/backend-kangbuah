@@ -68,8 +68,6 @@ export class FirebaseService {
           <p><a href="${link}" target="_blank">${link}</a></p>
         `,
       });
-
-      console.log(`✅ Verification email sent to ${email}`);
       return link;
     } catch (error) {
       console.error('❌ Gagal kirim email verifikasi:', error);
@@ -158,7 +156,6 @@ export class FirebaseService {
         <p>Jika kamu tidak meminta reset password, abaikan email ini.</p>
       `,
     });
-    console.log(`✅ Reset password email sent to ${email}`);
     return link;
   } catch (err) {
     console.error('❌ Gagal kirim email reset password:', err);
