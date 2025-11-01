@@ -15,7 +15,7 @@ import { Invoice } from '../../payments/entities/invoices.entity'
 
 // Mendefinisikan tipe data ENUM agar sesuai dengan yang ada di database
 export enum OrderStatus {
-  MENUNGGU_PERSETUJUAN = 'MENUNGGU_PERSETUJUAN',
+  MENUNGGU_VERIFIKASI = 'MENUNGGU_VERIFIKASI',
   MENUNGGU_PEMBAYARAN = 'MENUNGGU_PEMBAYARAN',
   SEDANG_DIPROSES = 'SEDANG_DIPROSES',
   DALAM_PENGIRIMAN = 'DALAM_PENGIRIMAN',
@@ -67,7 +67,7 @@ export class Order {
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.MENUNGGU_PERSETUJUAN,
+    default: OrderStatus.SEDANG_DIPROSES,
   })
   status: OrderStatus;
 

@@ -153,7 +153,7 @@ export class OrdersService {
       delivery_address_id: deliveryAddressId,
       order_date: new Date(),
       total_price: 0,
-      status: OrderStatus.MENUNGGU_PERSETUJUAN,
+      status: OrderStatus.SEDANG_DIPROSES,
     });
 
     await this.orderRepo.save(order);
