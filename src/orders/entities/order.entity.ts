@@ -87,6 +87,30 @@ export class Order {
     enum: paymentMethod
   })
   payment_method: paymentMethod;
+  
+  @Column({ nullable: true })
+  delivery_pic_name: string;
+
+  @Column({ nullable: true })
+  delivery_street: string;
+
+  @Column({ nullable: true })
+  delivery_ward: string;
+
+  @Column({ nullable: true })
+  delivery_city: string;
+
+  @Column({ nullable: true })
+  delivery_province: string;
+
+  @Column({ nullable: true })
+  delivery_postal_code: string;
+
+  @Column({ nullable: true })
+  billing_company_name: string;
+
+  @Column({ nullable: true })
+  billing_phone_number: string;
 
   // --- RELASI ANTAR TABEL ---
 

@@ -154,7 +154,15 @@ export class OrdersService {
       order_date: new Date(),
       total_price: 0,
       status: OrderStatus.SEDANG_DIPROSES,
-      payment_method: formData.payment_method
+      payment_method: formData.payment_method,
+      delivery_pic_name: addressData.pic_name,
+      delivery_street: addressData.street,
+      delivery_city: addressData.city,
+      delivery_ward: addressData.ward,
+      delivery_province: addressData.province,
+      delivery_postal_code: addressData.postal_code,
+      billing_company_name: user.company_name,
+      billing_phone_number: user.phone_number
     });
 
     await this.orderRepo.save(order);
@@ -230,7 +238,7 @@ export class OrdersService {
 
   async getAllOrders() {
     return this.orderRepo.find({
-      relations: ['user', 'order_details', 'order_details.product', 'delivery_address'],
+      relations: ['user', 'order_details', 'order_details.product'],
       order: { order_date: 'DESC' },
     });
   }
@@ -238,7 +246,7 @@ export class OrdersService {
   async getOrderById(orderId: string) {
     const order = await this.orderRepo.findOne({
       where: { order_id: orderId },
-      relations: ['order_details', 'order_details.product', 'delivery_address'],
+      relations: ['order_details', 'order_details.product'],
     });
 
     if (!order) {
