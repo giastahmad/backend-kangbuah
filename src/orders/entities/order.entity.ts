@@ -23,6 +23,11 @@ export enum OrderStatus {
   DIBATALKAN = 'DIBATALKAN',
 }
 
+export enum paymentMethod {
+  QRIS = 'QRIS',
+  BANK_TRANSFER = 'BANK_TRANSFER'
+}
+
 @Entity({ name: 'orders' })
 export class Order {
   @PrimaryColumn({ type: 'varchar' })
@@ -76,6 +81,12 @@ export class Order {
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   created_at: Date;
+
+  @Column({
+    type: 'enum',
+    enum: paymentMethod
+  })
+  payment_method: paymentMethod;
 
   // --- RELASI ANTAR TABEL ---
 

@@ -154,6 +154,7 @@ export class OrdersService {
       order_date: new Date(),
       total_price: 0,
       status: OrderStatus.SEDANG_DIPROSES,
+      payment_method: formData.payment_method
     });
 
     await this.orderRepo.save(order);
@@ -229,7 +230,7 @@ export class OrdersService {
 
   async getAllOrders() {
     return this.orderRepo.find({
-      relations: ['user', 'order_details', 'order_details.product'],
+      relations: ['user', 'order_details', 'order_details.product', 'delivery_address'],
       order: { order_date: 'DESC' },
     });
   }
