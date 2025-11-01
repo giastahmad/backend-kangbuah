@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MailService } from 'src/mail/mailer.service';
-import { Order } from 'src/orders/entities/order.entity';
+import { Order, OrderStatus } from 'src/orders/entities/order.entity';
 import { OrdersService } from 'src/orders/orders.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Repository } from 'typeorm';
 import { Invoice, paymentStatus } from './entities/invoices.entity';
 import { v4 as uuidv4 } from 'uuid';
 import PDFDocument from 'pdfkit';
+import * as path from 'path';
 
 @Injectable()
 export class PaymentsService {
@@ -45,6 +46,14 @@ export class PaymentsService {
     const publicUrl = urlResult.data.publicUrl;
 
     await this.ordersService.updateAttachmentUrl(orderId, publicUrl);
+    await this.ordersService.updateOrderStatus(
+      orderId,
+      OrderStatus.MENUNGGU_VERIFIKASI,
+    );
+
+    this.generateAndSendInvoice(orderId).catch((err) => {
+      console.error(`Gagal mengirim invoice untuk order ${orderId}:`, err);
+    });
 
     return {
       message: 'Bukti Pembayaran berhasil diunggah',
@@ -55,12 +64,7 @@ export class PaymentsService {
   async generateAndSendInvoice(orderId: string) {
     const order = await this.ordersRepository.findOne({
       where: { order_id: orderId },
-      relations: [
-        'user',
-        'address_id',
-        'order_details',
-        'order_details.product',
-      ],
+      relations: ['user', 'order_details', 'order_details.product'],
     });
 
     if (!order) {
@@ -75,6 +79,7 @@ export class PaymentsService {
       invoice_date: new Date(),
       total_price: order.total_price,
       payment_status: paymentStatus.PAID,
+      payment_method: order.payment_method,
     });
 
     const savedInvoice = await this.invoicesRepository.save(newInvoice);
@@ -99,18 +104,61 @@ export class PaymentsService {
     order: Order,
     invoice: Invoice,
   ): Promise<Buffer> {
+    const formatCurrency = (value: number | string) => {
+      return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(value));
+    };
+
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
-    doc.fontSize(20).text('INVOICE', { align: 'center' });
+    try {
+      const watermarkPath = path.join(__dirname, '..', 'assets/kangBUAHH.png');
+
+      const pageHeight = doc.page.height;
+      const pageWidth = doc.page.width;
+
+      doc.save();
+
+      doc.opacity(0.2);
+
+      doc.image(watermarkPath, 0, 0, {
+        fit: [pageWidth, pageHeight],
+        align: 'center',
+        valign: 'center',
+      });
+
+      doc.restore();
+    } catch (err) {
+      console.error('Gagal memuat watermark untuk PDF:', err);
+    }
+
+    doc.font('Helvetica-Bold');
+    doc.fontSize(20).text('INVOICE', { align: 'center', underline: true });
+    doc.moveDown();
+
     doc
       .fontSize(10)
+      .font('Helvetica')
       .text(`Invoice #: ${invoice.invoice_id}`, { align: 'right' });
     doc.text(
       `Tanggal: ${new Date(invoice.invoice_date).toLocaleDateString('id-ID')}`,
     );
     doc.moveDown();
-    doc.text('Dibayarkan oleh:', { underline: true });
-    doc.text(order.user.company_name || order.user.username);
+    doc.text('Dibayarkan oleh:');
+    doc.font('Helvetica-Bold');
+    doc.text(`${order.billing_company_name} - ${order.delivery_pic_name}`);
+    doc.moveDown();
+
+    doc.font('Helvetica').text(order.delivery_street);
+    doc.text(
+      `${order.delivery_ward ? order.delivery_ward + ', ' : ''}${order.delivery_city}`,
+    );
+    doc.text(`${order.delivery_province} ${order.delivery_postal_code}`);
+    doc.text(`Telp: ${order.billing_phone_number}`);
+
+    doc.moveDown();
     doc.moveDown();
     const tableTop = doc.y;
     doc.font('Helvetica-Bold');
@@ -118,6 +166,8 @@ export class PaymentsService {
     doc.text('Jumlah', 250, tableTop);
     doc.text('Harga Satuan', 350, tableTop, { width: 90, align: 'right' });
     doc.text('Total', 450, tableTop, { width: 90, align: 'right' });
+    doc.moveDown();
+
     doc.font('Helvetica');
     let i = 0;
 
@@ -125,17 +175,15 @@ export class PaymentsService {
       const y = doc.y;
       doc.text(item.product.name, 50, y);
       doc.text(`${item.quantity} ${item.product.unit}`, 250, y);
-      doc.text(`Rp ${item.price_per_unit}`, 350, y, {
+      doc.text(`Rp ${formatCurrency(item.price_per_unit)}`, 350, y, {
         width: 90,
         align: 'right',
       });
       const totalItem = item.quantity * item.price_per_unit;
-      doc.text(
-        `Rp ${totalItem.toFixed(2)}`, 
-        450,
-        y,
-        { width: 90, align: 'right' },
-      );
+      doc.text(`Rp ${formatCurrency(totalItem)}`, 450, y, {
+        width: 90,
+        align: 'right',
+      });
       doc.moveDown();
     }
 
@@ -143,7 +191,7 @@ export class PaymentsService {
     doc.moveDown(2);
 
     doc.fontSize(12).font('Helvetica-Bold');
-    doc.text(`GRAND TOTAL: Rp ${Number(order.total_price).toFixed(2)}`, {
+    doc.text(`GRAND TOTAL Rp ${formatCurrency(order.total_price)}`, {
       align: 'right',
     });
 
