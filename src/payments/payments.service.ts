@@ -141,26 +141,52 @@ export class PaymentsService {
     doc
       .fontSize(10)
       .font('Helvetica')
-      .text(`Invoice #: ${invoice.invoice_id}`, { align: 'right' });
-    doc.text(
-      `Tanggal: ${new Date(invoice.invoice_date).toLocaleDateString('id-ID')}`,
-    );
-    doc.moveDown();
-    doc.text('Dibayarkan oleh:');
-    doc.font('Helvetica-Bold');
-    doc.text(`${order.billing_company_name} - ${order.delivery_pic_name}`);
+      .text(
+        `Tanggal: ${new Date(invoice.invoice_date).toLocaleDateString('id-ID')}`,
+        { continued: true },
+      );
+    doc.text(`Invoice #: ${invoice.invoice_id}`, { align: 'right' });
     doc.moveDown();
 
-    doc.font('Helvetica').text(order.delivery_street);
+    doc.text('Dibayarkan oleh', { continued: true });
+    doc.text('Diterima oleh', { align: 'right' });
+
+    doc.font('Helvetica-Bold');
+    doc.text(`${order.billing_company_name} - ${order.delivery_pic_name}`, {
+      continued: true,
+    });
+    doc.text('Agro Niaga Sejahtera', { align: 'right' });
+    doc.moveDown();
+
+    doc.font('Helvetica').text(order.delivery_street, { continued: true });
+    doc.text('Jl H Taiman Timur', { align: 'right' });
+
     doc.text(
       `${order.delivery_ward ? order.delivery_ward + ', ' : ''}${order.delivery_city}`,
+      { continued: true },
     );
-    doc.text(`${order.delivery_province} ${order.delivery_postal_code}`);
-    doc.text(`Telp: ${order.billing_phone_number}`);
+    doc.text('Gedong, Jakarta Timur', { align: 'right' });
 
-    doc.moveDown();
-    doc.moveDown();
+    doc.text(`${order.delivery_province} ${order.delivery_postal_code}`, {
+      continued: true,
+    });
+    doc.text('DKI Jakarta', { align: 'right' });
+
+    doc.text(`Telp: ${order.billing_phone_number}`, { continued: true });
+    doc.text(`Telp: 081212599323`, { align: 'right' });
+
+    doc.text(order.user.email, {continued: true});
+    doc.text('agroniagasejahtera04@gmail.com', {
+      align: 'right',
+    });
+
+    doc.text('kangcodekangbuah@gmail.com', {
+      align: 'right',
+    });
+
+    doc.moveDown(2);
     const tableTop = doc.y;
+    doc.lineCap('butt').moveTo(50, doc.y).lineTo(545, doc.y).stroke();
     doc.font('Helvetica-Bold');
     doc.text('Produk', 50, tableTop);
     doc.text('Jumlah', 250, tableTop);
@@ -174,7 +200,7 @@ export class PaymentsService {
     for (const item of order.order_details) {
       const y = doc.y;
       doc.text(item.product.name, 50, y);
-      doc.text(`${item.quantity} ${item.product.unit}`, 250, y);
+      doc.text(`${item.quantity} x ${item.product.unit}`, 250, y);
       doc.text(`Rp ${formatCurrency(item.price_per_unit)}`, 350, y, {
         width: 90,
         align: 'right',
