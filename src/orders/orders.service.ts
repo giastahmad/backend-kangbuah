@@ -89,6 +89,28 @@ export class OrdersService {
     const user = await this.userRepo.findOne({ where: { user_id: userId } });
     if (!user) throw new NotFoundException('User tidak ditemukan');
 
+    for (const item of products) {
+      if (!item.product_id || item.quantity <= 0) {
+        throw new BadRequestException('Data produk tidak valid.');
+      }
+
+      const product = await this.productRepo.findOne({
+        where: { product_id: item.product_id },
+      });
+
+      if (!product) {
+        throw new NotFoundException(
+          `Produk dengan ID ${item.product_id} tidak ditemukan`,
+        );
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(
+          `Stok untuk ${product.name} tidak mencukupi (tersisa: ${product.stock})`,
+        );
+      }
+    }
+
     if (formData) {
       const allowedUserFields = ['company_name', 'npwp', 'phone_number'];
       for (const field of allowedUserFields) {
@@ -153,7 +175,7 @@ export class OrdersService {
       delivery_address_id: deliveryAddressId,
       order_date: new Date(),
       total_price: 0,
-      status: OrderStatus.SEDANG_DIPROSES,
+      status: OrderStatus.MENUNGGU_VERIFIKASI,
       payment_method: formData.payment_method,
       delivery_pic_name: addressData.pic_name,
       delivery_street: addressData.street,
@@ -162,7 +184,7 @@ export class OrdersService {
       delivery_province: addressData.province,
       delivery_postal_code: addressData.postal_code,
       billing_company_name: user.company_name,
-      billing_phone_number: user.phone_number
+      billing_phone_number: user.phone_number,
     });
 
     await this.orderRepo.save(order);

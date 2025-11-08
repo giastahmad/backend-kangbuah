@@ -48,7 +48,7 @@ export class PaymentsService {
     await this.ordersService.updateAttachmentUrl(orderId, publicUrl);
     await this.ordersService.updateOrderStatus(
       orderId,
-      OrderStatus.MENUNGGU_VERIFIKASI,
+      OrderStatus.SEDANG_DIPROSES,
     );
 
     this.generateAndSendInvoice(orderId).catch((err) => {
