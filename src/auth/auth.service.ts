@@ -61,8 +61,6 @@ export class AuthService {
 
       return this.generateTokens(user);
     } catch (error) {
-      console.error('Error detail:', error);
-
       throw new UnauthorizedException('Terjadi masalah saat memproses login.');
     }
   }

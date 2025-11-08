@@ -70,7 +70,6 @@ export class FirebaseService {
       });
       return link;
     } catch (error) {
-      console.error('❌ Gagal kirim email verifikasi:', error);
       throw new InternalServerErrorException('Gagal kirim email verifikasi');
     }
   }
@@ -158,7 +157,6 @@ export class FirebaseService {
     });
     return link;
   } catch (err) {
-    console.error('❌ Gagal kirim email reset password:', err);
     throw new InternalServerErrorException('Gagal kirim email reset password');
   }
 }

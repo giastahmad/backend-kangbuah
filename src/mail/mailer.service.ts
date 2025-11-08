@@ -28,7 +28,7 @@ export class MailService {
       });
       return info;
     } catch (err) {
-      console.error('❌ Error sending email:', err);
+      console.error('Error sending email:', err);
       throw new InternalServerErrorException('Gagal kirim email');
     }
   }
