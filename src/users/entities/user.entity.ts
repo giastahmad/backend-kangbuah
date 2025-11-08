@@ -40,6 +40,9 @@ export class User {
   @Column({ type: 'bool' })
   is_verified: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  hashed_refresh_token: string | null;
+
   //Relation
 
   @OneToMany(() => Order, (order) => order.user)

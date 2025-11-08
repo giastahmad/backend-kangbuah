@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import * as admin from 'firebase-admin';
+import cookieParser = require('cookie-parser');
 
 async function bootstrap() {
   
@@ -17,8 +18,10 @@ async function bootstrap() {
   app.enableCors({
     origin: 'http://localhost:5173',
     methods: 'GET,HEAD,PUT,POST,PATCH,DELETE',
-    credential: true
+    credentials: true
   })
+
+  app.use(cookieParser());
 
   app.useGlobalInterceptors(new ResponseInterceptor());
   await app.listen(process.env.PORT ?? 3000);

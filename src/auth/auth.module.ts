@@ -10,6 +10,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { FirebaseModule } from '../firebase/firebase.module';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { MailModule } from 'src/mail/mail.module';
+import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 
 @Module({
   imports: [
@@ -22,13 +23,13 @@ import { MailModule } from 'src/mail/mail.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '3h' },
+        signOptions: { expiresIn: '15m' },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
   exports: [AuthService], 
 })
 export class AuthModule {}
