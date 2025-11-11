@@ -39,13 +39,11 @@ export class ReportController {
     return this.reportService.getStatusDistribution();
   }
 
-  // Tambahan: kategori produk (pie chart)
   @Get('category-distribution')
   getCategoryDistribution() {
     return this.reportService.getCategoryDistribution();
   }
 
-  // Tambahan: total customer (number)
   @Get('total-customers')
   getTotalCustomers() {
     return this.reportService.getTotalCustomers();

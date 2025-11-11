@@ -19,7 +19,6 @@ export class ReportService {
     private readonly productRepo: Repository<Product>,
   ) {}
 
-  // --- DASHBOARD SUMMARY ---
   async getDashboardSummary() {
     const totalOrders = await this.orderRepo.count();
     const totalRevenueResult = await this.orderRepo
@@ -37,7 +36,6 @@ export class ReportService {
     };
   }
 
-  // --- SALES TREND (LINE CHART) ---
   async getSalesTrend() {
     const result = await this.orderRepo
       .createQueryBuilder('o')
@@ -66,7 +64,6 @@ export class ReportService {
     return qb.getMany();
   }
 
-  // --- TOP PRODUCTS ---
   async getTopProducts() {
     const result = await this.orderDetailRepo
       .createQueryBuilder('od')
@@ -84,7 +81,6 @@ export class ReportService {
     }));
   }
 
-  // --- TOP CUSTOMERS (TIER) ---
   async getTopCustomers() {
     const result = await this.orderRepo
       .createQueryBuilder('o')
@@ -102,7 +98,6 @@ export class ReportService {
     }));
   }
 
-  // --- KATEGORI PRODUK (PIE CHART) ---
   async getCategoryDistribution() {
     const result = await this.orderDetailRepo
       .createQueryBuilder('od')
@@ -118,13 +113,11 @@ export class ReportService {
     }));
   }
 
-  // --- TOTAL CUSTOMER (NUMBER) ---
   async getTotalCustomers() {
     const count = await this.userRepo.count();
     return { total_customers: count };
   }
 
-  // --- STATUS DISTRIBUTION (OPSIONAL) ---
   async getStatusDistribution() {
     const result = await this.orderRepo
       .createQueryBuilder('o')
