@@ -53,6 +53,19 @@ export class ReportService {
     }));
   }
 
+  async getOrderList(status?: string, dateFrom?: string, dateTo?: string) {
+    const qb = this.orderRepo
+      .createQueryBuilder('o')
+      .leftJoinAndSelect('o.user', 'user')
+      .orderBy('o.order_date', 'DESC');
+
+    if (status) qb.andWhere('o.status = :status', { status });
+    if (dateFrom) qb.andWhere('o.order_date >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('o.order_date <= :dateTo', { dateTo });
+
+    return qb.getMany();
+  }
+
   // --- TOP PRODUCTS ---
   async getTopProducts() {
     const result = await this.orderDetailRepo

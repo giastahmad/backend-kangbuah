@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query} from '@nestjs/common';
 import { ReportService } from './report.service';
 
 @Controller('reports')
@@ -13,6 +13,15 @@ export class ReportController {
   @Get('trend')
   getTrend() {
     return this.reportService.getSalesTrend();
+  }
+
+  @Get('orders')
+  getOrderList(
+    @Query('status') status?: string,
+    @Query('date_from') dateFrom?: string,
+    @Query('date_to') dateTo?: string
+  ) {
+    return this.reportService.getOrderList(status, dateFrom, dateTo);
   }
 
   @Get('top-products')
