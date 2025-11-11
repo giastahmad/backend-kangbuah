@@ -23,4 +23,19 @@ export class ReportController {
   ) {
     return this.reportService.getOrderList(status, dateFrom, dateTo);
   }
+
+  @Get('top-products')
+  getTopProducts() {
+    return this.reportService.getTopProducts();
+  }
+
+  @Get('top-customers')
+  getTopCustomers() {
+    return this.reportService.getTopCustomers();
+  }
+
+  @Get('status-distribution')
+  getStatusDistribution() {
+    return this.reportService.getStatusDistribution();
+  }
 }

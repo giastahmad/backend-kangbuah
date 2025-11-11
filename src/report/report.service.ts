@@ -70,4 +70,55 @@ export class ReportService {
 
     return qb.getMany();
   }
+  async getTopProducts() {
+    const result = await this.orderDetailRepo
+      .createQueryBuilder('od')
+      .leftJoin('od.product', 'p')
+      .select('p.name', 'product_name')
+      .addSelect('SUM(od.quantity)', 'total_sold')
+      .addSelect('SUM(od.quantity * od.price_per_unit)', 'revenue')
+      .groupBy('p.name')
+      .orderBy('total_sold', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    return result.map(r => ({
+      product_name: r.product_name,
+      total_sold: Number(r.total_sold),
+      revenue: Number(r.revenue),
+    }));
+  }
+
+  async getTopCustomers() {
+    const result = await this.orderRepo
+      .createQueryBuilder('o')
+      .leftJoin('o.user', 'u')
+      .select('u.company_name', 'customer')
+      .addSelect('COUNT(o.order_id)', 'orders')
+      .addSelect('SUM(o.total_price)', 'revenue')
+      .groupBy('u.company_name')
+      .orderBy('revenue', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    return result.map(r => ({
+      customer: r.customer,
+      total_orders: Number(r.orders),
+      total_spent: Number(r.revenue),
+    }));
+  }
+
+  async getStatusDistribution() {
+    const result = await this.orderRepo
+      .createQueryBuilder('o')
+      .select('o.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('o.status')
+      .getRawMany();
+
+    return result.map(r => ({
+      status: r.status,
+      count: Number(r.count),
+    }));
+  }
 }
