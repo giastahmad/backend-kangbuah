@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { FirebaseModule } from './firebase/firebase.module'; 
 import { MailModule } from './mail/mail.module';
+import { ReportModule } from './report/report.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MulterModule } from '@nestjs/platform-express';
 
@@ -43,6 +44,7 @@ import { MulterModule } from '@nestjs/platform-express';
     UsersModule,
     MailModule,
     PaymentsModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
