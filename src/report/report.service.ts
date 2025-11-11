@@ -138,4 +138,19 @@ export class ReportService {
       count: Number(r.count),
     }));
   }
+
+  async getWeeklySales() {
+    const result = await this.orderRepo
+      .createQueryBuilder('o')
+      .select("TO_CHAR(DATE_TRUNC('week', o.order_date), 'IYYY-IW')", 'week')
+      .addSelect('SUM(o.total_price)', 'revenue')
+      .groupBy('week')
+      .orderBy('week', 'ASC')
+      .getRawMany();
+
+    return result.map(r => ({
+      week: r.week,
+      revenue: Number(r.revenue),
+    }));
+  }
 }

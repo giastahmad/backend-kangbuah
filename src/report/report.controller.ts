@@ -50,4 +50,9 @@ export class ReportController {
   getTotalCustomers() {
     return this.reportService.getTotalCustomers();
   }
+
+  @Get('weekly-sales')
+  getWeeklySales() {
+    return this.reportService.getWeeklySales();
+  }
 }
