@@ -19,95 +19,99 @@ export class ReportService {
     private readonly productRepo: Repository<Product>,
   ) {}
 
+  // --- DASHBOARD SUMMARY ---
   async getDashboardSummary() {
-    const [
-      totalOrders,
-      totalRevenue,
-      uniqueCustomers
-    ] = await Promise.all([
-      this.orderRepo.count(),
-      this.orderRepo.sum('total_price'),
-      this.orderRepo
-        .createQueryBuilder('o')
-        .select('COUNT(DISTINCT o.user_id)', 'count')
-        .getRawOne(),
-    ]);
+    const totalOrders = await this.orderRepo.count();
+    const totalRevenueResult = await this.orderRepo
+      .createQueryBuilder('o')
+      .select('SUM(o.total_price)', 'sum')
+      .getRawOne();
+    const totalRevenue = Number(totalRevenueResult.sum) || 0;
 
-    const avgOrderValue = totalOrders > 0 ? (totalRevenue ?? 0) / totalOrders : 0;
+    const totalCustomers = await this.userRepo.count();
 
     return {
       total_orders: totalOrders,
-      total_revenue: Number(totalRevenue) || 0,
-      avg_order_value: avgOrderValue,
-      active_customers: Number(uniqueCustomers.count) || 0,
+      total_revenue: totalRevenue,
+      total_customers: totalCustomers,
     };
   }
 
+  // --- SALES TREND (LINE CHART) ---
   async getSalesTrend() {
     const result = await this.orderRepo
       .createQueryBuilder('o')
-      .select("TO_CHAR(o.order_date, 'YYYY-MM')", 'period')
+      .select("TO_CHAR(o.order_date, 'YYYY-MM-DD')", 'date')
       .addSelect('SUM(o.total_price)', 'revenue')
-      .groupBy('period')
-      .orderBy('period', 'ASC')
+      .groupBy('date')
+      .orderBy('date', 'ASC')
       .getRawMany();
 
     return result.map(r => ({
-      period: r.period,
+      date: r.date,
       revenue: Number(r.revenue),
     }));
   }
 
-  async getOrderList(status?: string, dateFrom?: string, dateTo?: string) {
-    const qb = this.orderRepo
-      .createQueryBuilder('o')
-      .leftJoinAndSelect('o.user', 'user')
-      .orderBy('o.order_date', 'DESC');
-
-    if (status) qb.andWhere('o.status = :status', { status });
-    if (dateFrom) qb.andWhere('o.order_date >= :dateFrom', { dateFrom });
-    if (dateTo) qb.andWhere('o.order_date <= :dateTo', { dateTo });
-
-    return qb.getMany();
-  }
+  // --- TOP PRODUCTS ---
   async getTopProducts() {
     const result = await this.orderDetailRepo
       .createQueryBuilder('od')
       .leftJoin('od.product', 'p')
       .select('p.name', 'product_name')
       .addSelect('SUM(od.quantity)', 'total_sold')
-      .addSelect('SUM(od.quantity * od.price_per_unit)', 'revenue')
       .groupBy('p.name')
       .orderBy('total_sold', 'DESC')
-      .limit(10)
+      .limit(5)
       .getRawMany();
 
     return result.map(r => ({
       product_name: r.product_name,
       total_sold: Number(r.total_sold),
-      revenue: Number(r.revenue),
     }));
   }
 
+  // --- TOP CUSTOMERS (TIER) ---
   async getTopCustomers() {
     const result = await this.orderRepo
       .createQueryBuilder('o')
       .leftJoin('o.user', 'u')
       .select('u.company_name', 'customer')
-      .addSelect('COUNT(o.order_id)', 'orders')
-      .addSelect('SUM(o.total_price)', 'revenue')
+      .addSelect('SUM(o.total_price)', 'total_spent')
       .groupBy('u.company_name')
-      .orderBy('revenue', 'DESC')
-      .limit(10)
+      .orderBy('total_spent', 'DESC')
+      .limit(5)
       .getRawMany();
 
     return result.map(r => ({
       customer: r.customer,
-      total_orders: Number(r.orders),
-      total_spent: Number(r.revenue),
+      total_spent: Number(r.total_spent),
     }));
   }
 
+  // --- KATEGORI PRODUK (PIE CHART) ---
+  async getCategoryDistribution() {
+    const result = await this.orderDetailRepo
+      .createQueryBuilder('od')
+      .leftJoin('od.product', 'p')
+      .select('p.name', 'category')
+      .addSelect('SUM(od.quantity)', 'total_sold')
+      .groupBy('p.name') //ganti name jadi category kalo maunya yang "buah2-an", "sayuran", "pesanan khusus"
+      .getRawMany();
+
+    return result.map((r) => ({
+      category: r.category,
+      total_sold: Number(r.total_sold),
+    }));
+  }
+
+  // --- TOTAL CUSTOMER (NUMBER) ---
+  async getTotalCustomers() {
+    const count = await this.userRepo.count();
+    return { total_customers: count };
+  }
+
+  // --- STATUS DISTRIBUTION (OPSIONAL) ---
   async getStatusDistribution() {
     const result = await this.orderRepo
       .createQueryBuilder('o')

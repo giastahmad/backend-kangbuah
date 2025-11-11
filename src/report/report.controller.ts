@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ReportService } from './report.service';
 
 @Controller('reports')
@@ -15,15 +15,6 @@ export class ReportController {
     return this.reportService.getSalesTrend();
   }
 
-  @Get('orders')
-  getOrderList(
-    @Query('status') status?: string,
-    @Query('date_from') dateFrom?: string,
-    @Query('date_to') dateTo?: string
-  ) {
-    return this.reportService.getOrderList(status, dateFrom, dateTo);
-  }
-
   @Get('top-products')
   getTopProducts() {
     return this.reportService.getTopProducts();
@@ -37,5 +28,17 @@ export class ReportController {
   @Get('status-distribution')
   getStatusDistribution() {
     return this.reportService.getStatusDistribution();
+  }
+
+  // Tambahan: kategori produk (pie chart)
+  @Get('category-distribution')
+  getCategoryDistribution() {
+    return this.reportService.getCategoryDistribution();
+  }
+
+  // Tambahan: total customer (number)
+  @Get('total-customers')
+  getTotalCustomers() {
+    return this.reportService.getTotalCustomers();
   }
 }
