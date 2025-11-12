@@ -102,9 +102,9 @@ export class ReportService {
     const result = await this.orderDetailRepo
       .createQueryBuilder('od')
       .leftJoin('od.product', 'p')
-      .select('p.name', 'category')
+      .select('p.type', 'category')
       .addSelect('SUM(od.quantity)', 'total_sold')
-      .groupBy('p.name') //ganti name jadi category kalo maunya yang "buah2-an", "sayuran", "pesanan khusus"
+      .groupBy('p.type') 
       .getRawMany();
 
     return result.map((r) => ({
