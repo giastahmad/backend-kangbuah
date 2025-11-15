@@ -45,7 +45,7 @@ export class ProductsController {
   async findAll(
     @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
     @Query('status') status?: ProductStatus[],
     @Query('type') type?: ProductType,
     @Query('search') search?: string,

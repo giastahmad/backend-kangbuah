@@ -96,38 +96,52 @@ export class ProductsService {
     const take = option.limit || 10;
     const skip = (option.page - 1) * take;
     const where: any = {};
+    const qb = this.productsRepository.createQueryBuilder('product');
 
     if (!option.isAdmin) {
-      where.status = Not(
-        In([ProductStatus.TIDAK_AKTIF, ProductStatus.STOK_HABIS]),
-      );
+      qb.where('product.status NOT IN (:...statuses)', {
+        statuses: [ProductStatus.TIDAK_AKTIF, ProductStatus.STOK_HABIS],
+      });
     } else if (option.isAdmin && option.status) {
-      where.status = In(
-        Array.isArray(option.status) ? option.status : [option.status],
-      );
+      const statuses = Array.isArray(option.status)
+        ? option.status
+        : [option.status];
+      qb.where('product.status IN (:...statuses)', { statuses });
     }
 
     if (option.type) {
-      where.type = option.type;
+      qb.andWhere('product.type = :type', { type: option.type });
     }
 
     if (option.search) {
-      where.name = ILike(`%${option.search}%`);
+      qb.andWhere('product.name ILIKE :search', {
+        search: `%${option.search}%`,
+      });
     }
 
-    const orderOptions: any = {};
-    if (option.sortBy) {
-      orderOptions[option.sortBy] = option.order || 'ASC';
+    if (option.sortBy === 'status_priority') {
+      qb.orderBy(
+        `CASE
+          WHEN "product"."status" = '${ProductStatus.STOK_MENIPIS}' THEN 1
+          WHEN "product"."status" = '${ProductStatus.STOK_HABIS}' THEN 2
+          WHEN "product"."status" = '${ProductStatus.TIDAK_AKTIF}' THEN 3
+          ELSE 4
+        END`,
+        'ASC',
+      );
+
+      qb.addOrderBy('product.name', 'ASC');
+    } else if (option.sortBy) {
+      const sortOrder = option.order || 'ASC';
+      qb.orderBy(`product.${option.sortBy}`, sortOrder);
     } else {
-      orderOptions['name'] = 'ASC';
+      qb.orderBy('product.name', 'ASC');
     }
 
-    const [result, total] = await this.productsRepository.findAndCount({
-      take: take,
-      skip: skip,
-      where: where,
-      order: orderOptions,
-    });
+
+    qb.skip(skip).take(take);
+
+    const [result, total] = await qb.getManyAndCount();
 
     return {
       data: result,
@@ -245,9 +259,9 @@ export class ProductsService {
         `Stok produk ${product.name} tidak mencukupi`,
       );
     }
-    
+
     product.stock -= quantitySold;
-    
+
     if (product.status !== ProductStatus.TIDAK_AKTIF) {
       if (product.stock <= 0) {
         product.status = ProductStatus.STOK_HABIS;
@@ -257,7 +271,7 @@ export class ProductsService {
         product.status = ProductStatus.TERSEDIA;
       }
     }
-    
+
     return this.productsRepository.save(product);
   }
 }
