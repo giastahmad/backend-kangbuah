@@ -124,7 +124,7 @@ export class ProductsService {
         `CASE
           WHEN "product"."status" = '${ProductStatus.STOK_MENIPIS}' THEN 1
           WHEN "product"."status" = '${ProductStatus.STOK_HABIS}' THEN 2
-          WHEN "product"."status" = '${ProductStatus.TIDAK_AKTIF}' THEN 3
+          WHEN "product"."status" = '${ProductStatus.TERSEDIA}' THEN 3
           ELSE 4
         END`,
         'ASC',
