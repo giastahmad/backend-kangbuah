@@ -241,7 +241,7 @@ export class OrdersService {
     return this.orderRepo.save(order);
   }
 
-  async updateOrderStatus(orderId: string, status: OrderStatus) {
+  async updateOrderStatus(orderId: string, status: OrderStatus, note? : string) {
     const order = await this.orderRepo.findOne({
       where: { order_id: orderId },
     });
@@ -249,12 +249,26 @@ export class OrdersService {
 
     order.status = status;
 
+    if (note !== undefined) {
+      order.notes = note;
+    }
+
     if (status === OrderStatus.DALAM_PENGIRIMAN) {
       const now = new Date();
       order.delivery_date = now;
       order.delivery_time = format(now, 'HH:mm');
     }
 
+    return this.orderRepo.save(order);
+  }
+
+  async updateOrderNote(orderId: string, note: string) {
+    const order = await this.orderRepo.findOne({
+      where: { order_id: orderId },
+    });
+    if (!order) throw new NotFoundException('Pesanan tidak ditemukan');
+
+    order.notes = note;
     return this.orderRepo.save(order);
   }
 

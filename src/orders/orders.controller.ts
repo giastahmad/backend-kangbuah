@@ -1,13 +1,19 @@
-import { Controller, Get, Post, Param, Body, Patch, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrderStatus } from './entities/order.entity';
 import { JwtAuthGuard } from 'src/auth/auth-guards/jwt-auth.guard';
 
-
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
-
 
   @Get('list')
   getAllOrders() {
@@ -42,15 +48,22 @@ export class OrdersController {
   updateStatus(
     @Param('orderId') orderId: string,
     @Body('status') status: OrderStatus,
+    @Body('note') note?: string,
   ) {
-    return this.ordersService.updateOrderStatus(orderId, status);
+    return this.ordersService.updateOrderStatus(orderId, status, note);
+  }
+
+  @Patch(':id/note')
+  async updateNote(
+    @Param('id') id: string, 
+    @Body('note') note: string
+  ) {
+    return this.ordersService.updateOrderNote(id, note);
   }
 
   @Get(':orderId')
   @UseGuards(JwtAuthGuard)
-  getOrderById(
-    @Param('orderId') orderId: string
-  ){
+  getOrderById(@Param('orderId') orderId: string) {
     return this.ordersService.getOrderById(orderId);
   }
 
