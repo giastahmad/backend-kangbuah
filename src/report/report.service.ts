@@ -146,4 +146,86 @@ export class ReportService {
       revenue: Number(r.revenue),
     }));
   }
+
+  async getDashboardInterpretation() {
+    // --- Ambil semua data yang dibutuhkan ---
+    const summary = await this.getDashboardSummary();
+    const trend = await this.getSalesTrend();
+    const statusDist = await this.getStatusDistribution();
+    const topProducts = await this.getTopProducts();
+    const categoryDist = await this.getCategoryDistribution();
+    const weekly = await this.getWeeklySales();
+
+    // --- Interpretasi Sales Trend ---
+    let trendText = "Tidak ada data penjualan.";
+    if (trend.length > 0) {
+      const highest = trend.reduce((a, b) =>
+        Number(a.revenue) > Number(b.revenue) ? a : b
+      );
+      trendText = `Penjualan tertinggi terjadi pada tanggal ${highest.date} dengan pendapatan sebesar Rp ${Number(highest.revenue).toLocaleString('id-ID')}.`;
+    }
+
+    // --- Interpretasi Status Pesanan ---
+    let statusText = "Belum ada pesanan.";
+    if (statusDist.length > 0) {
+      const totalStatus = statusDist.reduce((sum, s) => sum + Number(s.count), 0);
+      const highestStatus = statusDist.reduce((a, b) =>
+        Number(a.count) > Number(b.count) ? a : b
+      );
+      const percentage = ((highestStatus.count / totalStatus) * 100).toFixed(1);
+
+      statusText = `Status pesanan didominasi oleh ${highestStatus.status} sebanyak ${highestStatus.count} pesanan (${percentage}%).`;
+    }
+
+    // --- Interpretasi Produk Teratas ---
+    let topProductText = "Belum ada data produk.";
+    if (topProducts.length > 0) {
+      topProductText = `Produk terlaris adalah ${topProducts[0].product_name} dengan total ${topProducts[0].total_sold} unit terjual.`;
+    }
+
+    // --- Interpretasi Kategori ---
+    let categoryText = "Data kategori tidak tersedia.";
+    if (categoryDist.length > 0) {
+      const bestCat = categoryDist.reduce((a, b) =>
+        Number(a.total_sold) > Number(b.total_sold) ? a : b
+      );
+      categoryText = `Kategori dengan penjualan terbanyak adalah ${bestCat.category} dengan total ${bestCat.total_sold} unit terjual.`;
+    }
+
+    // --- Interpretasi Weekly Sales ---
+    let weeklyText = "Belum ada data mingguan.";
+    if (weekly.length > 0) {
+      const maxWeek = weekly.reduce((a, b) =>
+        Number(a.revenue) > Number(b.revenue) ? a : b
+      );
+      weeklyText = `Pendapatan mingguan tertinggi terjadi pada minggu ${maxWeek.week} sebesar Rp ${Number(maxWeek.revenue).toLocaleString('id-ID')}.`;
+    }
+
+    // --- Final Summary Text ---
+    const finalText = `
+  📊 **Rangkuman Dashboard Penjualan**
+
+  • Total pesanan: ${summary.total_orders}
+  • Total pendapatan: Rp ${summary.total_revenue.toLocaleString('id-ID')}
+  • Total pelanggan: ${summary.total_customers}
+
+  📈 Tren Penjualan  
+  ${trendText}
+
+  📦 Status Pesanan  
+  ${statusText}
+
+  🥇 Produk Terlaris  
+  ${topProductText}
+
+  📚 Kategori Penjualan  
+  ${categoryText}
+
+  📆 Penjualan Mingguan  
+  ${weeklyText}
+  `;
+
+    return { interpretation: finalText };
+  }
+
 }

@@ -53,4 +53,8 @@ export class ReportController {
   getWeeklySales() {
     return this.reportService.getWeeklySales();
   }
+  @Get('summary-full')
+  getFullSummary() {
+    return this.reportService.getDashboardInterpretation();
+  }
 }
