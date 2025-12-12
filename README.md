@@ -1,12 +1,6 @@
 <div style="display: flex; align-items: center; gap: 20px;">
-<p align="center">
-<br>
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-<span style="display: inline-block; width: 80px;"></span>
-<p>
+  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
   <img src="./assets/kangBUAHH.png" width="140" alt="KangBuah Logo"/>
-</p>
 </div>
 
 # KangBuah Backend API
