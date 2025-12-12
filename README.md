@@ -46,6 +46,18 @@ cd backend-kangbuah
 npm install
 ```
 
+## Setup Kredensial Firebase
+
+Aplikasi ini membutuhkan file fisik `serviceAccountKey.json` untuk mengakses Firebase Admin SDK. Ikuti langkah ini:
+
+1. Buka [Firebase Console](https://console.firebase.google.com/) → Project Settings.
+2. Masuk ke tab **Service Accounts**.
+3. Klik tombol **Generate New Private Key**.
+4. Sebuah file `.json` akan terunduh ke komputer Anda.
+5. Ubah nama file tersebut menjadi: `serviceAccountKey.json`.
+6. Pindahkan file `serviceAccountKey.json` tersebut ke dalam folder root proyek.
+7. **REMINDER**: File ini adalah file rahasia.
+
 ## Konfigurasi Environment
 
 Aplikasi ini memerlukan konfigurasi variabel lingkungan agar dapat berjalan. Buat file bernama `.env` di direktori root proyek dan isi dengan kunci berikut:
