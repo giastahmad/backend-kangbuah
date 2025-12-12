@@ -1,5 +1,5 @@
 <div style="display: flex; align-items: center; gap: 20px;">
-  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" style="position: relative; top: -8px;"/>
+  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" style="position: relative; top: -80px;"/>
   <img src="./assets/kangBUAHH.png" width="140" alt="KangBuah Logo"/>
 </div>
 
