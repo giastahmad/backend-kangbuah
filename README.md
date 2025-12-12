@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-  <img src="./assets/kangBUAHH.png" width="120" alt="KangBuah Logo" style="margin-left: 20px;" />
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="90" alt="Nest Logo" /></a>
+  <img src="./assets/kangBUAHH.png" width="120" alt="KangBuah Logo" style="margin-left: 60px;" />
 </p>
 
 # KangBuah Backend API
@@ -123,8 +123,11 @@ npm run build
 ## Tim Pengembang
 
 Proyek ini dikembangkan oleh:
-- **Giast Ahmad** - Backend Developer
+- **Faizzani Zingsky Pratiwi** - Project Manager
 - **Risya Annisa' Chairyah** - Backend Developer
+- **Giast Ahmad** - Backend Developer
+- **Devi Humaira** - Frontend Developer
+- **Muhammad Danendra Syah H** - Frontend Developer
 
 ## Lisensi
 
