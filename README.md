@@ -1,4 +1,4 @@
-<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+<div style="display: flex; justify-content: center; gap: 20px;">
   <img src="https://nestjs.com/img/logo-small.svg" width="120" style="vertical-align: middle;" />
   <img src="./assets/kangBUAHH.png" width="140" />
 </div>
