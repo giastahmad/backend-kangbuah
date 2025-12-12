@@ -1,6 +1,7 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="90" alt="Nest Logo" /></a>
-  <img src="./assets/kangBUAHH.png" width="120" alt="KangBuah Logo" style="margin-left: 60px;" />
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <span style="display: inline-block; width: 80px;"></span>
+  <img src="./assets/kangBUAHH.png" width="120" alt="KangBuah Logo" />
 </p>
 
 # KangBuah Backend API
